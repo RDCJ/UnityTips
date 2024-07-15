@@ -1,6 +1,6 @@
 # Unity Editor相关
-
-## CreateAssetMenu
+## Attribute
+### CreateAssetMenu
 CreateAssetMenu() 是一个自定义属性(Attribute)，用于在编辑器中创建一个自定义 ScriptableObject 的菜单项。这个菜单项可以让开发者在 Unity 编辑器中快速创建新的 ScriptableObject 实例
 
 ```
@@ -10,12 +10,12 @@ public class SampleScriptableObject : ScriptableObject
     // something
 }
 ```
-### 参数
+#### 参数
 * fileName: 这是创建的新ScriptableObject实例的默认文件名。Unity将根据这个文件名在项目中创建对应的文件。通常使用 "NewAsset" 或类名作为默认文件名，并且Unity将自动添加一个数字后缀，以确保文件名的唯一性。
 * menuName: 这是在Unity编辑器中创建菜单项的路径。在此重载中，可以自定义菜单项的路径。例如："Assets/Create/Custom Assets"。如果使用无参重载，菜单项路径将默认为"Assets/Create"。
 * order: 这是一个可选参数，用于指定菜单项的顺序。如果有多个菜单项，可以使用order参数来设置它们的显示顺序。较小的order值将优先显示。
 
-## MenuItem
+### MenuItem
 MenuItem可用在顶部菜单栏添加按钮，执行相关的函数
 ```
 [MenuItem("xxx/xxx", true/false, 0)]
@@ -24,7 +24,7 @@ private static void SampleFunction()
     // Do something
 }
 ```
-### 参数
+#### 参数
 1. 路径: string 类型。用 '/' 来分割路径 <br><br>
 2. (可选) 是否是验证函数：bool 类型，默认为false <br>
     控制跟它同路径的方法是否可点击。
@@ -45,7 +45,31 @@ private static void SampleFunction()
     ```
     这里第2个方法是对第1个方法的验证, 如果有选中一个transform，那么返回true；否则返回false。它的返回值，决定了跟它同路径的第一个方法是否可点击。<br><br>
 3. (可选) 函数优先级：影响在面板上的出现顺序，默认为1000
-  
+
+### InitializeOnLoadMethod
+允许在 Unity 加载时初始化编辑器类方法
+```
+class MyClass
+{
+    [InitializeOnLoadMethod]
+    static void OnProjectLoadedInEditor()
+    {
+        Debug.Log("Project loaded in Unity Editor");
+    }
+}
+```
+### InitializeOnLoad
+当编辑器启动时，自动调用类的静态构造函数
+```
+[InitializeOnLoad]
+public static class MyInitializer
+{
+    static MyInitializer()
+    {
+        Debug.Log("InitializeOnLoad called.");
+    }
+}
+```
 ## EditorWindow
 
 ### 创建自定义窗口
@@ -53,17 +77,12 @@ private static void SampleFunction()
 // 继承EditorWindow
 public class SampleEditorWindow : EditorWindow
 {
+    // 顶部菜单添加按钮
+    [MenuItem("xxx/xxx")]
     public static void Open()
     {
         // GetWindow打开窗口
         SampleEditorWindow window = GetWindow<SampleEditorWindow>("window name");
-    }
-
-    // 顶部菜单添加按钮
-    [MenuItem("xxx/xxx")]
-    private static void OpenWindow()
-    {
-        SampleEditorWindow.Open();
     }
     
     // 窗口绘制逻辑
@@ -182,3 +201,38 @@ if (GUILayout.Button(text))
 
 GUILayout.EndScrollView();
 ```
+
+## EditorGUILayout
+### 在inpector中显示/编辑组件的属性
+```
+EditorGUILayout.PropertyField(property);
+```
+
+## AssetDatabase
+### 查找资源
+```
+// 在指定文件夹中，按照filter查找资源，返回guid
+string[] guids = AssetDatabase.FindAssets(filter, new string[] { folder_1, folder2 });
+```
+### GUID转资源路径
+```
+string path = AssetDatabase.GUIDToAssetPath(guid);
+```
+### 直接从asset中加载资源
+```
+// public static T LoadAssetAtPath<T>(string assetPath) where T : UnityEngine.Object
+
+GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefab_AssetPath);
+```
+### 使用关联程序打开资源
+```
+AssetDatabase.OpenAsset(obj);
+```
+
+### 导入所有更改的资源
+```
+AssetDatabase.Refresh();
+```
+此函数将导入已更改其内容修改数据或已在项目文件夹中添加/删除的所有资源。
+
+此方法会隐式触发资源垃圾回收
